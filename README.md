@@ -1,3 +1,5 @@
+Markdown · README.md
+
 # Esign-Util — RSA-2048 электрондық қолтаңба утилитасы
 
 Java тілінде жазылған консольдік утилита: RSA-2048 кілт жұбын жасайды, файлға **SHA256withRSA** алгоритмімен қол қояды және қолтаңбаны тексереді. Кілттер **PEM** форматында сақталады.
@@ -6,15 +8,15 @@ Java тілінде жазылған консольдік утилита: RSA-20
 
 ## Мазмұны
 
-1. [Мақсаты](#мақсаты)
-2. [Research: теория](#research-теория)
-3. [Диаграммалар](#диаграммалар)
-4. [Орнату](#орнату)
-5. [Қолдану мысалы](#қолдану-мысалы)
-6. [Жоба құрылымы](#жоба-құрылымы)
-7. [Тесттер](#тесттер)
-8. [Қауіпсіздік ескертпесі](#қауіпсіздік-ескертпесі)
-9. [Лицензия](#лицензия)
+1. [Мақсаты](#%D0%BC%D0%B0%D2%9B%D1%81%D0%B0%D1%82%D1%8B)
+2. [Research: теория](#research-%D1%82%D0%B5%D0%BE%D1%80%D0%B8%D1%8F)
+3. [Диаграммалар](#%D0%B4%D0%B8%D0%B0%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B0%D0%BB%D0%B0%D1%80)
+4. [Орнату](#%D0%BE%D1%80%D0%BD%D0%B0%D1%82%D1%83)
+5. [Қолдану мысалы](#%D2%9B%D0%BE%D0%BB%D0%B4%D0%B0%D0%BD%D1%83-%D0%BC%D1%8B%D1%81%D0%B0%D0%BB%D1%8B)
+6. [Жоба құрылымы](#%D0%B6%D0%BE%D0%B1%D0%B0-%D2%9B%D2%B1%D1%80%D1%8B%D0%BB%D1%8B%D0%BC%D1%8B)
+7. [Тесттер](#%D1%82%D0%B5%D1%81%D1%82%D1%82%D0%B5%D1%80)
+8. [Қауіпсіздік ескертпесі](#%D2%9B%D0%B0%D1%83%D1%96%D0%BF%D1%81%D1%96%D0%B7%D0%B4%D1%96%D0%BA-%D0%B5%D1%81%D0%BA%D0%B5%D1%80%D1%82%D0%BF%D0%B5%D1%81%D1%96)
+9. [Лицензия](#%D0%BB%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F)
 
 ## Мақсаты
 
@@ -23,7 +25,7 @@ Java тілінде жазылған консольдік утилита: RSA-20
 - Құжат өзгерсе, қолтаңба тексеруден өтпейтінін дәлелдеу.
 
 | Команда | Әрекет |
-|---|---|
+| --- | --- |
 | `keygen` | RSA-2048 кілт жұбын жасап, PEM файлдарға сақтайды |
 | `sign` | Файлға жеке кілтпен қол қояды (`.sig` файл жасайды) |
 | `verify` | Файл мен `.sig` қолтаңбасын ашық кілтпен тексереді |
@@ -43,7 +45,7 @@ Java тілінде жазылған консольдік утилита: RSA-20
 ### Алгоритмдерді таңдау
 
 | Параметр | Таңдау | Негіздеме |
-|---|---|---|
+| --- | --- | --- |
 | Асимметриялық алгоритм | RSA | JCA-да стандартты, кең таралған |
 | Кілт ұзындығы | 2048 бит | Қазіргі ең төменгі ұсынылатын деңгей (NIST); 1024 — әлсіз |
 | Хэш | SHA-256 | MD5 және SHA-1 коллизияға осал |
@@ -125,6 +127,75 @@ flowchart TB
     LOCAL x--x|"commit жасалмайды"| REPO
 ```
 
+### 4. UML: Use Case диаграммасы
+
+```mermaid
+flowchart LR
+    U(["Пайдаланушы<br/>(қол қоюшы)"])
+    V(["Тексеруші"])
+    subgraph SYS["Esign-Util"]
+        UC1(["Кілт жұбын жасау"])
+        UC2(["Файлға қол қою"])
+        UC3(["Қолтаңбаны тексеру"])
+        UC4(["PEM файлға сақтау"])
+        UC5(["PEM файлдан оқу"])
+    end
+    U --- UC1
+    U --- UC2
+    V --- UC3
+    UC1 -.->|include| UC4
+    UC2 -.->|include| UC5
+    UC3 -.->|include| UC5
+```
+
+### 5. UML: Class диаграммасы
+
+```mermaid
+classDiagram
+    class Main {
+        +main(args) void
+        -printUsage() void
+    }
+    class KeyService {
+        -KEY_SIZE : int = 2048
+        +generateKeyPair() KeyPair
+    }
+    class PemUtil {
+        +writePrivateKey(key, path) void
+        +writePublicKey(key, path) void
+        +readPrivateKey(path) PrivateKey
+        +readPublicKey(path) PublicKey
+    }
+    class SignService {
+        -ALGORITHM : String = SHA256withRSA
+        +sign(file, privateKey) byte[]
+        +verify(file, signature, publicKey) boolean
+    }
+    Main --> KeyService : uses
+    Main --> SignService : uses
+    Main --> PemUtil : uses
+    KeyService ..> PemUtil : кілтті сақтау
+    SignService ..> PemUtil : кілтті оқу
+```
+
+### 6. UML: Activity диаграммасы (тексеру алгоритмі)
+
+```mermaid
+flowchart TD
+    S((Бастау)) --> A["Файл, .sig және public.pem беріледі"]
+    A --> B{"Файлдар бар ма?"}
+    B -- Жоқ --> E1["Қате: файл табылмады"]
+    B -- Иә --> C["public.pem оқу (X.509)"]
+    C --> D["Signature.initVerify(publicKey)"]
+    D --> F["Файлды буфермен update() ету"]
+    F --> G{"verify(.sig) нәтижесі"}
+    G -- true --> H["VALID"]
+    G -- false --> I["INVALID"]
+    E1 --> Z((Соңы))
+    H --> Z
+    I --> Z
+```
+
 ## Орнату
 
 Талаптар: JDK 17+, Maven 3.8+ (немесе Gradle 8+).
@@ -155,7 +226,6 @@ java -jar target/esign-util.jar verify --key keys/public.pem --file document.pdf
 
 ### Скриншот
 
-<!-- Жұмыс нәтижесінің скриншотын осында қосыңыз -->
 ![Демо](docs/screenshot.png)
 
 ## Жоба құрылымы
